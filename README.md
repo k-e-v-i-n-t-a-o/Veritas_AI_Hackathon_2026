@@ -1,5 +1,6 @@
 # Project name
 **Track: CLIMATE!!**
+
 **Team: Kevin Tao. :)**
 ## The problem
 Who has this problem, and why does it matter? (2-3 sentences)
@@ -18,16 +19,21 @@ One or two concrete next steps with more time.
 ## Sources
 Datasets, pretrained models, tutorials and AI tools used, with links.
 
-API references: [Open-Meteo Forecast API](https://open-meteo.com/en/docs), [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api), [OpenAQ API](https://docs.openaq.org/).
+ - Data was taken from [Open Meteo](open-meteo.com) and [OpenAQ](https://explore.openaq.org/#1.2/20/40).
+ - Copilot used to create the application(app.py).
+ - [scikit-learn site](https://scikit-learn.org/stable/) and Gemini helped me understand and use the sklearn machine learning library, and the actual code in the notebook was done by me!
+ - API references: [Open-Meteo Forecast API](https://open-meteo.com/en/docs), [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api), [OpenAQ API](https://docs.openaq.org/).
 
-
-## Run the prediction app
+## Run the prediction app(by copilot)
 
 Install the app dependencies and launch the Gradio interface:
+When prompted in the terminal, enter your OpenAQ API key
 
 ```bash
 python -m pip install -r requirements.txt
-python app.py
+read -s "OPENAQ_API_KEY?OpenAQ API key: "
+export OPENAQ_API_KEY
+.venv/bin/python app.py
 ```
 
 Enter latitude and longitude to fetch the latest three completed local days and predict the following day's average PM2.5 concentration. The model uses each day's PM2.5 average, weekday, precipitation hours, and maximum 10 m wind speed, scaled with the saved `MyScalerForMyVeryOwnModelYayHappyFace` artifact.
