@@ -1,3 +1,5 @@
+# well, I don't really need to keep this. but i guess its good here anyways.
+
 import duckdb
 
 con = duckdb.connect()
