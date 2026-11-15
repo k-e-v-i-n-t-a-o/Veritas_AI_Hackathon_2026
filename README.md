@@ -18,6 +18,7 @@ One or two concrete next steps with more time.
 ## Sources
 Datasets, pretrained models, tutorials and AI tools used, with links.
 
+API references: [Open-Meteo Forecast API](https://open-meteo.com/en/docs), [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api), [OpenAQ API](https://docs.openaq.org/).
 
 
 ## Run the prediction app
@@ -34,5 +35,3 @@ Enter latitude and longitude to fetch the latest three completed local days and 
 Weather data comes from the Open-Meteo Forecast API. For air-quality observations, set `OPENAQ_API_KEY` in the environment before launching; the app searches for a nearby OpenAQ PM2.5 sensor and uses it when readings cover all three days. Without a key, or if nearby readings are incomplete, it uses the Open-Meteo Air Quality API instead. Open-Meteo PM2.5 is model-derived rather than a station observation.
 
 This hackathon model returns a research estimate, not health guidance.
-
-API references: [Open-Meteo Forecast API](https://open-meteo.com/en/docs), [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api), [OpenAQ API](https://docs.openaq.org/).

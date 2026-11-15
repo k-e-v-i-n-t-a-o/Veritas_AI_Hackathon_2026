@@ -144,6 +144,10 @@ def openaq_pm25(
             for measurement in measurements:
                 timestamp = measurement.get("datetime", {})
                 timestamp = timestamp.get("utc") if isinstance(timestamp, dict) else timestamp
+                if timestamp is None:
+                    period = measurement.get("period", {})
+                    timestamp = period.get("datetimeFrom", period.get("datetime_from", {}))
+                    timestamp = timestamp.get("utc") if isinstance(timestamp, dict) else timestamp
                 value = measurement.get("value")
                 if timestamp is None or value is None:
                     continue
@@ -220,7 +224,7 @@ def air_quality_band(value: float) -> str:
 
 
 def predict_air_quality(
-    latitude: float | None, longitude: float | None
+    latitude: float | None, longitude: float | None, air_source: str
 ) -> tuple[str, list[list[Any]]]:
     if latitude is None or longitude is None:
         return "## Enter both coordinates to run a prediction.", []
@@ -230,19 +234,23 @@ def predict_air_quality(
     try:
         weather = open_meteo_weather(latitude, longitude)
         days, timezone_name = completed_days(weather)
-        source = "Open-Meteo CAMS model"
-        api_key = os.getenv("OPENAQ_API_KEY")
-        if api_key:
-            try:
-                pm25_by_day, station_name = openaq_pm25(
-                    latitude, longitude, days, timezone_name, api_key
+        if air_source == "OpenAQ monitor readings":
+            api_key = os.getenv("OPENAQ_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "OpenAQ monitor data requires an API key. Set OPENAQ_API_KEY "
+                    "in the environment where app.py is running, then restart the app. "
+                    "Choose Open-Meteo CAMS below only if you want modeled PM2.5 values."
                 )
-                source = f"OpenAQ: {station_name}"
-            except Exception:
-                pm25_by_day = open_meteo_pm25(latitude, longitude, timezone_name)
-                source = "Open-Meteo CAMS model (OpenAQ readings unavailable)"
-        else:
+            pm25_by_day, station_name = openaq_pm25(
+                latitude, longitude, days, timezone_name, api_key
+            )
+            source = f"OpenAQ monitor: {station_name}"
+        elif air_source == "Open-Meteo CAMS model":
             pm25_by_day = open_meteo_pm25(latitude, longitude, timezone_name)
+            source = "Open-Meteo CAMS model"
+        else:
+            raise ValueError("Choose a supported PM2.5 data source.")
 
         features = build_features(days, pm25_by_day, weather)
         model, scaler = load_artifacts()
@@ -303,6 +311,12 @@ with gr.Blocks(
         latitude = gr.Number(label="Latitude", value=29.7604, precision=6)
         longitude = gr.Number(label="Longitude", value=-95.3698, precision=6)
         predict_button = gr.Button("Predict tomorrow", variant="primary")
+    air_source = gr.Radio(
+        choices=["OpenAQ monitor readings", "Open-Meteo CAMS model"],
+        value="OpenAQ monitor readings",
+        label="Past PM2.5 data source",
+        info="OpenAQ uses nearby station observations. The CAMS option uses modeled estimates.",
+    )
     result = gr.Markdown(elem_classes="result-panel")
     history = gr.Dataframe(
         headers=["Local day", "PM2.5 (µg/m³)", "Rain (hours)", "Max wind (km/h)"],
@@ -312,7 +326,7 @@ with gr.Blocks(
     )
     predict_button.click(
         fn=predict_air_quality,
-        inputs=[latitude, longitude],
+        inputs=[latitude, longitude, air_source],
         outputs=[result, history],
     )
 
