@@ -3,8 +3,9 @@ import csv
 VALUE_INDEX = 0
 DATE_INDEX = 1
 DAY_UNITS_DIGIT_INDEX = 9
-WEATHER_FILE = "austin_w.csv"
-AIR_QUALITY_FILE = "austin_a.csv"
+WEATHER_FILE = "new_data/india_w.csv"
+AIR_QUALITY_FILE = "new_data/india_a.csv"
+STARTING_WEEKDAY = 5
 
 new = []
 d = []
@@ -38,6 +39,6 @@ with open(AIR_QUALITY_FILE, mode='r') as file:
         
         d.append(float(row[VALUE_INDEX]))
 
-with open("/new_data.csv", mode='w') as file:
+with open("new_data/new_data.csv", mode='w') as file:
     writer = csv.writer(file)
     writer.writerows(new)
