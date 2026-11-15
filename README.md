@@ -3,30 +3,33 @@
 
 **Team: Kevin Tao. :)**
 ## The problem
-The problem is that anyone who lives in a city is at high risk of lung or air related diseases, and need to know when the air surrounding them is above the advisable line for living in. According to the [Climate & Clean Air Coalition](https://www.ccacoalition.org/news/world-health-organization-releases-new-global-air-pollution-data), ==9 out of 10 people breathe air containing high levels of pollutants==, which poses a massive risk for most of Earth.
+The problem is that anyone who lives in a city is at high risk of lung or air related diseases, and need to know when the air surrounding them is above the advisable line for living in. According to the [Climate & Clean Air Coalition](https://www.ccacoalition.org/news/world-health-organization-releases-new-global-air-pollution-data), 9 out of 10 people breathe air containing high levels of pollutants, which poses a massive risk for most of Earth's population.
 ## What we built
 We built an application that takes a user-inputed coordinate(longitude and latitude) and gives them our model's prediction of tomorrow's air quality(PM2.5 µg/m³). This gives them the general idea of where they want to spend their day to reduce their risk of lung related diseases.
 ## How it works
 Data: which dataset, how many examples, how we cleaned it.
-
+ - Air Quality data came from Houston, TX from OpenAQ(openaq.org)
+ - Weather data came from Houston, TX from Open Meteo(open-meteo.com)
+ - I created a python script to filter and edit the data in a formate so that the model could easily gobble it up.
+ - After the model was trained and tested, it got some new data from Austin, TX, and Delhi in India. It didn't completely blow up when we gave it the data, so that was good:).
 Model: what we used and why.
+ - The model we used was a scikit-learn linear regression model.
+    - Regression means it is outputting a number on a spectrumn instead of classes
+    - Linear means it draws a linear line through each data thing and decides something based on the position of the dot vs the line
+    - scikit-learn is the library that provies all these nice functional functions!
+ - I tried some other regression models scikit-learn provides, such as random forest, but they all performed less good than the linear regression model.
 ## Results
-Our baseline scored X. Our model scored Y on held-out test data.
-Where it fails, and why we think so.
-## What we(i)'d do next
-
+The baseline scored -100,000 on a scale from negative infinity to 1.0 on data from Austin, where 1.0 is a perfect model. After removing some of the paremeters(WeekDay,Temperature,DaylightTime,RainSum), the score went up all the way to negative one, and then up to 0.5! However, the model is still highly inaccurate, with one of the test points being at 300, and the model predicting 150. This is likely because the model was trained on data from Houston, TX and was trying to predict data all the way in India, causing the massive error margin.
+## What we'd do next
  - retrain the model using data from around the world, because right now it is predicting Houston air quality pretty well, but other places... not so good.
  - automate the getting of the data, because it took me an extremely long time to get and filter the data, and if I want to do it around the world, that is not what I want to do.
-
 ## Sources
-Datasets, pretrained models, tutorials and AI tools used, with links.
-
  - Data was taken from Open Meteo(open-meteo.com) and OpenAQ(https://explore.openaq.org/#1.2/20/40).
  - Copilot used to create the application(app.py).
  - [scikit-learn site](https://scikit-learn.org/stable/) and Gemini helped me understand and use the sklearn machine learning library, and the actual code in the notebook was done by me!
  - API references: [Open-Meteo Forecast API](https://open-meteo.com/en/docs), [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api), [OpenAQ API](https://docs.openaq.org/).
 
-## Run the prediction app(by copilot)
+## How to run the prediction app (by Copilot)
 
 Install the app dependencies and launch the Gradio interface:
 When prompted in the terminal, enter your OpenAQ API key
