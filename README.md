@@ -29,7 +29,7 @@ The baseline scored -100,000 on a scale from negative infinity to 1.0 on data fr
  - Copilot was used to create the application(app.py).
  - [scikit-learn site](https://scikit-learn.org/stable/) and Gemini helped me understand and use the sklearn machine learning library, and the actual code in the notebook and the other notebook and the random python files were all done by me!
  - API references: [Open-Meteo Forecast API](https://open-meteo.com/en/docs), [Open-Meteo Air Quality API](https://open-meteo.com/en/docs/air-quality-api), [OpenAQ API](https://docs.openaq.org/).
- - Copilot made the name. i think its pretty good
+ - Copilot made the name of the project. i think its pretty cool!
 
 ## How to run the prediction app (by Copilot)
 
