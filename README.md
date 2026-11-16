@@ -18,7 +18,7 @@ Data:
 Model:
  - The model we used was a scikit-learn linear regression model.
     - Regression means it is outputting a number on a spectrumn instead of classes
-    - Linear means it draws a linear line through each data parameter and decides something based on the position of the dot vs the line
+    - Linear means it creates a linear formula based on the dataset and predicts using that formula and the data it is given.
     - scikit-learn is the library that provies all these nice functional functions!
  - I tried some other regression models scikit-learn provides, such as random forest, but they all performed less good than the linear regression model.
 
