@@ -25,6 +25,13 @@ Model:
 ## Results
 The baseline scored -100,000 on a scale from 0.0 to 1.0 on data from Austin, where 1.0 is a perfect model(R² value). After removing some of the paremeters(WeekDay,Temperature,DaylightTime,RainSum), the score went up all the way to negative one, and then up to 0.5! However, the model is still highly inaccurate, with one of the test points being at 300, and the model predicting 150. This is likely because the model was trained on data from Houston, TX and was trying to predict data all the way in India, causing the massive error margin.
 I also had the model multiply the result it got by x1.1, because this is better to have false alarms rather than everyone dying. Even though this lowered the model's overall accuracy, it made the real-fake-real-life implementation better.
+
+Error values for India:
+R² Score: 0.5934
+Mean Absolute Error: 38.3588
+Root Mean Squared error: 52.7933
+
+pretty bad, but at least we aren't in the negatives
 ## What we'd do next
  - retrain the model using data from around the world, because right now it is predicting Houston air quality pretty well, but other places... not so good.
  - automate the getting of the data, because it took me an extremely long time to get and filter the data, and if I want to do it around the world, that is not what I want to do.
