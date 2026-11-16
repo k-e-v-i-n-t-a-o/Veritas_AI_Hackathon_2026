@@ -1,3 +1,4 @@
 gradio>=6.0,<7.0
 scikit-learn>=1.6,<2.0
 certifi>=2024.2
+geonamescache>=3.0,<4.0

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import json
 import math
 import os
@@ -18,6 +19,7 @@ from zoneinfo import ZoneInfo
 
 import gradio as gr
 import certifi
+import geonamescache
 
 
 ROOT = Path(__file__).resolve().parent
@@ -27,6 +29,77 @@ OPEN_METEO_WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 OPEN_METEO_AIR_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 OPENAQ_URL = "https://api.openaq.org/v3"
 SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+DEFAULT_LATITUDE = 29.7604
+DEFAULT_LONGITUDE = -95.3698
+
+
+def load_city_catalog() -> tuple[
+    list[tuple[str, str]], dict[str, tuple[float, float, str, str, str]]
+]:
+    geonames = geonamescache.GeonamesCache()
+    countries = geonames.get_countries()
+    choices: list[tuple[str, str]] = []
+    city_data: dict[str, tuple[float, float, str, str, str]] = {}
+    for city in geonames.get_cities().values():
+        city_id = str(city["geonameid"])
+        city_name = str(city["name"])
+        country_code = str(city.get("countrycode", ""))
+        country_name = countries.get(country_code, {}).get("name", country_code)
+        region = str(city.get("admin1code", "")).strip()
+        latitude = float(city["latitude"])
+        longitude = float(city["longitude"])
+        label = (
+            f"{city_name}, {region}, {country_name}"
+            if region
+            else f"{city_name}, {country_name}"
+        )
+        choices.append((label, city_id))
+        city_data[city_id] = (latitude, longitude, label, city_name, country_code)
+    choices.sort(key=lambda choice: choice[0].casefold())
+    return choices, city_data
+
+
+CITY_CHOICES, CITY_DATA = load_city_catalog()
+DEFAULT_CITY_ID = min(
+    (
+        city_id
+        for city_id, city in CITY_DATA.items()
+        if city[3] == "Houston" and city[4] == "US"
+    ),
+    key=lambda city_id: abs(CITY_DATA[city_id][0] - DEFAULT_LATITUDE)
+    + abs(CITY_DATA[city_id][1] - DEFAULT_LONGITUDE),
+)
+
+
+def city_map_html(latitude: float, longitude: float, label: str) -> str:
+    padding = 0.12
+    bounds = ",".join(
+        str(value)
+        for value in (
+            max(-180, longitude - padding),
+            max(-85, latitude - padding),
+            min(180, longitude + padding),
+            min(85, latitude + padding),
+        )
+    )
+    map_url = (
+        "https://www.openstreetmap.org/export/embed.html?"
+        + urlencode(
+            {"bbox": bounds, "layer": "mapnik", "marker": f"{latitude},{longitude}"}
+        )
+    )
+    safe_label = html.escape(label, quote=True)
+    return (
+        f'<iframe src="{map_url}" title="Map showing {safe_label}" '
+        'loading="lazy" referrerpolicy="no-referrer-when-downgrade" '
+        'style="width:100%;height:380px;border:0;border-radius:4px" '
+        'allowfullscreen></iframe>'
+    )
+
+
+def select_city(city_id: str) -> tuple[float, float, str]:
+    latitude, longitude, label, _, _ = CITY_DATA[city_id]
+    return latitude, longitude, city_map_html(latitude, longitude, label)
 
 
 @lru_cache(maxsize=1)
@@ -223,6 +296,24 @@ def air_quality_band(value: float) -> str:
     return "Hazardous"
 
 
+def prediction_vibe(value: float) -> str:
+    if value < 0:
+        return "The model found negative pollution. Either magic, or a math problem."
+    if value <= 5:
+        return "Pristine rainforest air. Somewhere, a leaf is doing a great job."
+    if value <= 9:
+        return "Clean suburban air. The lawns are thriving, and so are your lungs."
+    if value < 15:
+        return "A little haze in the plot: not rainforest-fresh, not refinery-adjacent."
+    if value <= 25:
+        return "Average air. Nothing to write home about, unless home is very dramatic."
+    if value <= 50:
+        return "You might be living next to an oil refinery. That is a joke, not a diagnosis."
+    if value <= 150:
+        return "Wildfire-smoke vibes. Check local air-quality advisories before heading out."
+    return "The model says you should probably evacuate. Check official local guidance; this is not an emergency alert."
+
+
 def predict_air_quality(
     latitude: float | None, longitude: float | None, air_source: str
 ) -> tuple[str, list[list[Any]]]:
@@ -281,6 +372,7 @@ def predict_air_quality(
         result = (
             f"## {prediction:.1f} µg/m³\n"
             f"**Predicted next-day PM2.5 average** · {air_quality_band(prediction)}\n\n"
+            f"**Vibe check:** {prediction_vibe(prediction)}\n\n"
             f"PM2.5 source: {source}  \n"
             "Weather source: Open-Meteo  \n"
             "This is a research estimate, not health guidance."
@@ -299,6 +391,7 @@ CSS = """
 footer { display: none !important; }
 """
 
+selected_city = CITY_DATA[DEFAULT_CITY_ID]
 
 with gr.Blocks(
     title="Air Ahead | Next-day PM2.5",
@@ -308,9 +401,27 @@ with gr.Blocks(
         elem_classes="hero",
     )
     with gr.Row():
-        latitude = gr.Number(label="Latitude", value=29.7604, precision=6)
-        longitude = gr.Number(label="Longitude", value=-95.3698, precision=6)
+        city = gr.Dropdown(
+            choices=CITY_CHOICES,
+            value=DEFAULT_CITY_ID,
+            label="City",
+            filterable=True,
+        )
+    with gr.Row():
+        latitude = gr.Number(label="Latitude", value=selected_city[0], precision=6)
+        longitude = gr.Number(label="Longitude", value=selected_city[1], precision=6)
         predict_button = gr.Button("Predict tomorrow", variant="primary")
+    city_map = gr.HTML(
+        value=city_map_html(selected_city[0], selected_city[1], selected_city[2]),
+        label="Selected city map",
+        min_height=390,
+    )
+    city.change(
+        fn=select_city,
+        inputs=city,
+        outputs=[latitude, longitude, city_map],
+        api_visibility="private",
+    )
     air_source = gr.Radio(
         choices=["OpenAQ monitor readings", "Open-Meteo CAMS model"],
         value="OpenAQ monitor readings",
